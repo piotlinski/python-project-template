@@ -1,0 +1,60 @@
+variables:
+  PIP_CACHE_DIR: "${CI_PROJECT_DIR}/.cache/pip"
+  PRE_COMMIT_HOME: "${CI_PROJECT_DIR}/.cache/pre-commit"
+
+stages:
+  - tests
+  - release
+
+.poetry:
+  before_script: &poetry
+    - pip install poetry
+    - poetry config virtualenvs.in-project true
+
+.publish:
+  script: &publish
+    - poetry build -f wheel
+    # - poetry publish --username=<username> --password=<password>
+
+image: python:3.8
+
+tests:
+  stage: tests
+  except:
+    - tags
+
+  before_script:
+    - *poetry
+    - poetry install
+    - pip install pre-commit
+
+  script:
+    - pre-commit run --hook-stage manual --all-files
+    - poetry version $(poetry version | cut -f2 -d ' ')+$(git rev-parse --short HEAD)
+    - *publish
+
+  cache:
+    key: one-key-to-rule-them-all
+    paths:
+      - .cache/pip
+      - .cache/pre-commit
+      - .venv
+
+  artifacts:
+    paths:
+      - dist/*.whl
+
+release-package:
+  stage: release
+  only:
+    - tags
+
+  before_script:
+    - *poetry
+
+  script:
+    - *publish
+
+  artifacts:
+    paths:
+      - dist/*.whl

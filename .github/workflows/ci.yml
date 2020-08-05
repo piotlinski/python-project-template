@@ -1,0 +1,51 @@
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 1
+      - name: Set up Python 3.8
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.8
+
+      - name: Install poetry
+        uses: dschep/install-poetry-action@v1.3
+      - name: Cache poetry virtualenv
+        uses: actions/cache@v1
+        with:
+          path: ~/.virtualenvs
+          key: poetry-${{ hashFiles('**/poetry.lock') }}
+          restore-keys: |
+            poetry-${{ hashFiles('**/poetry.lock') }}
+      - name: Set poetry config
+        run: |
+          poetry config virtualenvs.in-project true
+          poetry config virtualenvs.path ~/.virtualenvs
+      - name: Install dependencies
+        run: poetry install
+        if: steps.cache.outputs.cache-hit != 'true'
+
+      - name: Set PY variable
+        run:
+          echo "::set-env name=PY::$(python -c 'import hashlib,
+          sys;print(hashlib.sha256(sys.version.encode()+sys.executable.encode()).hexdigest())')"
+      - name: Cache pre-commit
+        uses: actions/cache@v1
+        with:
+          path: ~/.cache/pre-commit
+          key: pre-commit|${{ env.PY }}|${{ hashFiles('.pre-commit-config.yaml') }}
+      - name: Run pre-commit
+        uses: pre-commit/action@v2.0.0
+        with:
+          extra_args: --hook-stage manual --all-files
+      # - name: Modify package version
+      #   run:
+      #     poetry version $(poetry version | cut -f2 -d ' ')+$(git rev-parse --short
+      #     HEAD)
+      #   if: github.event_name == 'push' && !contains(github.ref, 'refs/tags/')
+      # - name: Build and push package to PyPI
+      #   run: |
+      #     poetry build -f wheel
+      #     poetry publish --username=<username> --password=<password>
