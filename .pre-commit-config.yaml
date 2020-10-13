@@ -10,18 +10,19 @@ repos:
       - id: check-added-large-files
       - id: debug-statements
 
-  - repo: https://github.com/asottile/seed-isort-config
-    rev: v2.2.0
+  - repo: https://github.com/prettier/prettier
+    rev: 2.0.5
     hooks:
-      - id: seed-isort-config
+      - id: prettier
+        args: [ --prose-wrap=always, --print-width=88 ]
 
   - repo: https://github.com/timothycrosley/isort
-    rev: 5.2.2
+    rev: 5.5.4
     hooks:
       - id: isort
 
   - repo: https://github.com/psf/black
-    rev: 19.10b0
+    rev: 20.8b1
     hooks:
       - id: black
 
@@ -37,17 +38,12 @@ repos:
             "-e",
             "git+https://github.com/pycqa/pycodestyle#egg=pycodestyle",
           ]
+        args: [--config=pyproject.toml]
 
   - repo: https://github.com/pre-commit/mirrors-mypy
     rev: v0.782
     hooks:
       - id: mypy
-
-  - repo: https://github.com/prettier/prettier
-    rev: 2.0.5
-    hooks:
-      - id: prettier
-        args: [--prose-wrap=always, --print-width=88]
 
   - repo: local
     hooks:
