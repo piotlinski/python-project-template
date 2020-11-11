@@ -22,7 +22,7 @@ build-backend = "poetry.masonry.api"
 max-line-length = 88
 extend-ignore = ["E203", "E231"]
 
-[pytest]
+[tool.pytest.ini_options]
 addopts = "--color=yes"
 norecursedirs = "assets/*"
 
